@@ -28,6 +28,10 @@ func TestStatsHandlerRefreshesBeforeRendering(t *testing.T) {
 		if w.Code != 200 || !strings.Contains(w.Body.String(), "Go 100%") {
 			t.Fatalf("unexpected response: %d %s", w.Code, w.Body.String())
 		}
+		saved, err := os.ReadFile(filepath.Join(dir, "stats.svg"))
+		if err != nil || string(saved) != w.Body.String() {
+			t.Fatalf("saved SVG differs from response: %v", err)
+		}
 		if calls != i+1 {
 			t.Fatalf("refresh calls = %d, want %d", calls, i+1)
 		}

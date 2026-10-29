@@ -1,8 +1,10 @@
 # git-stats
 
-Data is cached in `data/` for 24 hours.
+## Dev
 
-## SVG
+Start dev server via `go run . -dev`.
+
+Access via:
 
 ```text
 http://localhost:8080/?limit=6&exclude=HTML,CSS

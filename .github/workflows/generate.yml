@@ -1,0 +1,63 @@
+name: Generate language stats
+
+on:
+  schedule:
+    - cron: "0 0 * * *"
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+concurrency:
+  group: generate-stats
+  cancel-in-progress: false
+
+jobs:
+  generate:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: master
+      - uses: actions/setup-go@v5
+        with:
+          go-version-file: go.mod
+      - name: Test
+        run: go test ./...
+      - name: Generate SVG
+        env:
+          GH_TOKEN: ${{ secrets.GH_STATS_TOKEN }}
+          FORGEJO_TOKEN: ${{ secrets.FORGEJO_TOKEN }}
+          FORGEJO_URL: ${{ secrets.FORGEJO_URL }}
+          FORGEJO_ORGS: ${{ secrets.FORGEJO_ORGS }}
+        run: |
+          test -n "$GH_TOKEN" || { echo 'GH_STATS_TOKEN is required'; exit 1; }
+          test -n "$FORGEJO_TOKEN" || { echo 'FORGEJO_TOKEN is required'; exit 1; }
+          # Always fetch fresh data on nightly runs, even if JSON is tracked.
+          rm -f data/github.json data/forgejo.json data/forgejo-*.json
+          go run . -limit 6 -exclude "JSON,Jupyter Notebook,TypeScript,HTML,JavaScript,Kotlin,Vue,CSS,Dart,SCSS,Makefile,Go Template,Monkey C,Dockerfile"
+      - name: Publish SVG to generate branch
+        shell: bash
+        run: |
+          set -euo pipefail
+          publish="$RUNNER_TEMP/stats-publish"
+          if git ls-remote --exit-code --heads origin generate >/dev/null; then
+            git fetch origin generate
+            git worktree add -b generate "$publish" FETCH_HEAD
+          else
+            git worktree add --detach "$publish" HEAD
+            git -C "$publish" checkout --orphan generate
+            git -C "$publish" rm -rf .
+          fi
+          mkdir -p "$publish/data"
+          cp data/stats.svg "$publish/data/stats.svg"
+          git -C "$publish" config user.name 'github-actions[bot]'
+          git -C "$publish" config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          git -C "$publish" add -f data/stats.svg
+          if git -C "$publish" diff --cached --quiet; then
+            echo 'SVG unchanged; nothing to publish.'
+            exit 0
+          fi
+          git -C "$publish" commit -m 'Update language stats SVG'
+          git -C "$publish" push origin HEAD:generate

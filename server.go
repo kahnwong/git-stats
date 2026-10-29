@@ -164,22 +164,16 @@ func newStatsHandler(directory string, fetchStats func() error) (http.Handler, e
 		// Keep cache checks, writes, and reads serialized across requests.
 		refreshMu.Lock()
 		defer refreshMu.Unlock()
-		if err := fetchStats(); err != nil {
-			slog.Error("refresh language statistics", "err", err)
-			http.Error(w, "Unable to refresh language statistics", http.StatusInternalServerError)
-			return
-		}
-		stats, err := combinedLanguageStats(directory)
+		svg, err := generateStatsSVG(directory, limit, query["exclude"], colors, fetchStats)
 		if err != nil {
-			slog.Error("load language statistics", "err", err)
-			http.Error(w, "Unable to load language statistics", http.StatusInternalServerError)
+			slog.Error("generate language statistics", "err", err)
+			http.Error(w, "Unable to generate language statistics", http.StatusInternalServerError)
 			return
 		}
 		w.Header().Set("Content-Type", "image/svg+xml; charset=utf-8")
 		w.Header().Set("X-Content-Type-Options", "nosniff")
 		w.Header().Set("Cache-Control", "no-cache")
-		stats = displayedLanguageStats(stats, limit, query["exclude"])
-		_, _ = w.Write(renderLanguagesSVG(stats, colors))
+		_, _ = w.Write(svg)
 	})
 	return mux, nil
 }
@@ -205,7 +199,11 @@ func fetchAllStats() error {
 	if err := fetchForgejoStats(); err != nil {
 		return fmt.Errorf("fetch personal Forgejo stats: %w", err)
 	}
-	for _, org := range []string{"archive", "baania"} {
+	for org := range strings.SplitSeq(os.Getenv("FORGEJO_ORGS"), ",") {
+		org = strings.TrimSpace(org)
+		if org == "" {
+			continue
+		}
 		if err := fetchForgejoStats(org); err != nil {
 			return fmt.Errorf("fetch Forgejo stats for %s: %w", org, err)
 		}
