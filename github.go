@@ -130,6 +130,10 @@ func githubLanguageStats(client graphqlClient) ([]languageStat, error) {
 		variables["endCursor"] = cursor
 	}
 
+	return aggregateLanguageStats(totals, total), nil
+}
+
+func aggregateLanguageStats(totals map[string]int64, total int64) []languageStat {
 	stats := make([]languageStat, 0, len(totals))
 	for language, bytes := range totals {
 		var percentage float64
@@ -145,5 +149,5 @@ func githubLanguageStats(client graphqlClient) ([]languageStat, error) {
 	slices.SortFunc(stats, func(a, b languageStat) int {
 		return cmp.Or(cmp.Compare(b.Bytes, a.Bytes), cmp.Compare(a.Language, b.Language))
 	})
-	return stats, nil
+	return stats
 }
