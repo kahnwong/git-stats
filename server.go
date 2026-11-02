@@ -14,6 +14,7 @@ import (
 	"strconv"
 	"strings"
 	"sync"
+	"text/template"
 	"time"
 
 	"gopkg.in/yaml.v3"
@@ -75,22 +76,28 @@ func combinedLanguageStats(directory string) ([]languageStat, error) {
 	return aggregateLanguageStats(totals, total), nil
 }
 
+//go:embed assets/languages.svg.tmpl
+var languagesSVGSource string
+
+var languagesSVGTemplate = template.Must(template.New("languages").Parse(languagesSVGSource))
+
+type svgLanguage struct {
+	X, Width         float64
+	Color, Label     string
+	CircleX, CircleY int
+	LabelX, LabelY   int
+}
+
 func renderLanguagesSVG(stats []languageStat, colors map[string]string) []byte {
 	rows := (len(stats) + 1) / 2
 	height := max(115, 90+rows*25)
-	var svg bytes.Buffer
-	fmt.Fprintf(&svg, `<svg width="300" height="%d" viewBox="0 0 300 %d" fill="none" xmlns="http://www.w3.org/2000/svg" role="img" aria-labelledby="titleId descId">
-<title id="titleId">Most Used Languages</title>
-<desc id="descId">Git language usage by bytes.</desc>
-<style>
-.header { font: 600 18px 'Segoe UI', Ubuntu, Sans-Serif; fill: #41b883; }
-@supports(-moz-appearance: auto) { .header { font-size: 15.5px; } }
-.lang-name { font: 400 11px "Segoe UI", Ubuntu, Sans-Serif; fill: #434d58; }
-</style>
-<rect x="0.5" y="0.5" width="299" height="%d" rx="4.5" fill="#fffefe" stroke="#e4e2e2"/>
-<text x="25" y="35" class="header">Most Used Languages</text>
-<defs><clipPath id="bar"><rect x="25" y="55" width="250" height="8" rx="5"/></clipPath></defs>
-`, height, height, height-1)
+	data := struct {
+		Height, BorderHeight int
+		Languages            []svgLanguage
+	}{
+		Height: height, BorderHeight: height - 1,
+		Languages: make([]svgLanguage, 0, len(stats)),
+	}
 	var total float64
 	for _, stat := range stats {
 		total += float64(stat.Bytes)
@@ -105,17 +112,21 @@ func renderLanguagesSVG(stats []languageStat, colors map[string]string) []byte {
 		if total > 0 {
 			width = float64(stat.Bytes) / total * 250
 		}
-		fmt.Fprintf(&svg, `<rect clip-path="url(#bar)" x="%.4f" y="55" width="%.4f" height="8" fill="%s"/>`, x, width, html.EscapeString(color))
-		x += width
 		column, row := i/rows, i%rows
 		labelX, labelY := 25+column*150, 90+row*25
-		label := html.EscapeString(stat.Language + " " + stat.Percentage)
-		fmt.Fprintf(&svg, `<g><title>%s</title><circle cx="%d" cy="%d" r="5" fill="%s"/><text x="%d" y="%d" class="lang-name">%s</text></g>`, label, labelX+5, labelY-4, html.EscapeString(color), labelX+15, labelY, label)
+		data.Languages = append(data.Languages, svgLanguage{
+			X: x, Width: width,
+			Color:   html.EscapeString(color),
+			Label:   html.EscapeString(stat.Language + " " + stat.Percentage),
+			CircleX: labelX + 5, CircleY: labelY - 4,
+			LabelX: labelX + 15, LabelY: labelY,
+		})
+		x += width
 	}
-	if len(stats) == 0 {
-		svg.WriteString(`<text x="25" y="105" class="lang-name">No language data available.</text>`)
+	var svg bytes.Buffer
+	if err := languagesSVGTemplate.Execute(&svg, data); err != nil {
+		panic(fmt.Errorf("render languages SVG: %w", err))
 	}
-	svg.WriteString("</svg>\n")
 	return svg.Bytes()
 }
 

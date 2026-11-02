@@ -1,0 +1,12 @@
+<svg width="300" height="{{.Height}}" viewBox="0 0 300 {{.Height}}" fill="none" xmlns="http://www.w3.org/2000/svg" role="img" aria-labelledby="titleId descId">
+<title id="titleId">Most Used Languages</title>
+<desc id="descId">Git language usage by bytes.</desc>
+<style>
+.header { font: 600 18px 'Segoe UI', Ubuntu, Sans-Serif; fill: #41b883; }
+@supports(-moz-appearance: auto) { .header { font-size: 15.5px; } }
+.lang-name { font: 400 11px "Segoe UI", Ubuntu, Sans-Serif; fill: #434d58; }
+</style>
+<rect x="0.5" y="0.5" width="299" height="{{.BorderHeight}}" rx="4.5" fill="#fffefe" stroke="#e4e2e2"/>
+<text x="25" y="35" class="header">Most Used Languages</text>
+<defs><clipPath id="bar"><rect x="25" y="55" width="250" height="8" rx="5"/></clipPath></defs>
+{{range .Languages}}<rect clip-path="url(#bar)" x="{{printf "%.4f" .X}}" y="55" width="{{printf "%.4f" .Width}}" height="8" fill="{{.Color}}"/><g><title>{{.Label}}</title><circle cx="{{.CircleX}}" cy="{{.CircleY}}" r="5" fill="{{.Color}}"/><text x="{{.LabelX}}" y="{{.LabelY}}" class="lang-name">{{.Label}}</text></g>{{else}}<text x="25" y="105" class="lang-name">No language data available.</text>{{end}}</svg>
