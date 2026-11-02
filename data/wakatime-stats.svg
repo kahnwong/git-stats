@@ -1,0 +1,12 @@
+<svg width="300" height="165" viewBox="0 0 300 165" fill="none" xmlns="http://www.w3.org/2000/svg" role="img" aria-labelledby="titleId descId">
+<title id="titleId">WakaTime Stats (last 7 days)</title>
+<desc id="descId">WakaTime language usage by coding time over the last 7 days.</desc>
+<style>
+.header { font: 600 18px 'Segoe UI', Ubuntu, Sans-Serif; fill: #41b883; }
+@supports(-moz-appearance: auto) { .header { font-size: 15.5px; } }
+.lang-name { font: 400 11px "Segoe UI", Ubuntu, Sans-Serif; fill: #434d58; }
+</style>
+<rect x="0.5" y="0.5" width="299" height="164" rx="4.5" fill="#fffefe" stroke="#e4e2e2"/>
+<text x="25" y="35" class="header">WakaTime Stats (last 7 days)</text>
+<defs><clipPath id="bar"><rect x="25" y="55" width="250" height="8" rx="5"/></clipPath></defs>
+<rect clip-path="url(#bar)" x="25.0000" y="55" width="76.6713" height="8" fill="#cb171e"/><g><title>YAML 30.67%</title><circle cx="30" cy="86" r="5" fill="#cb171e"/><text x="40" y="90" class="lang-name">YAML 30.67%</text></g><rect clip-path="url(#bar)" x="101.6713" y="55" width="63.9143" height="8" fill="#083fa1"/><g><title>Markdown 25.57%</title><circle cx="30" cy="111" r="5" fill="#083fa1"/><text x="40" y="115" class="lang-name">Markdown 25.57%</text></g><rect clip-path="url(#bar)" x="165.5856" y="55" width="40.5221" height="8" fill="#00ADD8"/><g><title>Go 16.21%</title><circle cx="30" cy="136" r="5" fill="#00ADD8"/><text x="40" y="140" class="lang-name">Go 16.21%</text></g><rect clip-path="url(#bar)" x="206.1077" y="55" width="30.0862" height="8" fill="#858585"/><g><title>Terraform 12.03%</title><circle cx="180" cy="86" r="5" fill="#858585"/><text x="190" y="90" class="lang-name">Terraform 12.03%</text></g><rect clip-path="url(#bar)" x="236.1939" y="55" width="21.3626" height="8" fill="#dea584"/><g><title>Rust 8.55%</title><circle cx="180" cy="111" r="5" fill="#dea584"/><text x="190" y="115" class="lang-name">Rust 8.55%</text></g><rect clip-path="url(#bar)" x="257.5564" y="55" width="17.4436" height="8" fill="#858585"/><g><title>Bash 6.98%</title><circle cx="180" cy="136" r="5" fill="#858585"/><text x="190" y="140" class="lang-name">Bash 6.98%</text></g></svg>
