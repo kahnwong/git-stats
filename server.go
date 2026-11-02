@@ -83,7 +83,7 @@ func renderLanguagesSVG(stats []languageStat, colors map[string]string) []byte {
 <title id="titleId">Most Used Languages</title>
 <desc id="descId">Git language usage by bytes.</desc>
 <style>
-.header { font: 600 18px 'Segoe UI', Ubuntu, Sans-Serif; fill: #2f80ed; }
+.header { font: 600 18px 'Segoe UI', Ubuntu, Sans-Serif; fill: #41b883; }
 @supports(-moz-appearance: auto) { .header { font-size: 15.5px; } }
 .lang-name { font: 400 11px "Segoe UI", Ubuntu, Sans-Serif; fill: #434d58; }
 </style>
