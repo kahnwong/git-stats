@@ -28,6 +28,8 @@ jobs:
       - name: Generate SVG
         env:
           GH_TOKEN: ${{ secrets.GH_STATS_TOKEN }}
+          WAKATIME_API_KEY: ${{ secrets.WAKATIME_API_KEY }}
+          WAKATIME_API_URL: ${{ secrets.WAKATIME_API_URL }}
           FORGEJO_TOKEN: ${{ secrets.FORGEJO_TOKEN }}
           FORGEJO_URL: ${{ secrets.FORGEJO_URL }}
           FORGEJO_ORGS: ${{ secrets.FORGEJO_ORGS }}
@@ -55,6 +57,10 @@ jobs:
           git -C "$publish" config user.name 'github-actions[bot]'
           git -C "$publish" config user.email '41898282+github-actions[bot]@users.noreply.github.com'
           git -C "$publish" add -f data/stats.svg
+          if [ -f data/wakatime-stats.svg ]; then
+            cp data/wakatime-stats.svg "$publish/data/wakatime-stats.svg"
+            git -C "$publish" add -f data/wakatime-stats.svg
+          fi
           if git -C "$publish" diff --cached --quiet; then
             echo 'SVG unchanged; nothing to publish.'
             exit 0

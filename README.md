@@ -8,6 +8,7 @@ Access via:
 
 ```text
 http://localhost:8080/?limit=6&exclude=HTML,CSS
+http://localhost:8080/wakatime?limit=6&exclude=HTML,CSS
 ```
 
 | Parameter | Description                                                                                  |

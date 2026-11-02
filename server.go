@@ -89,12 +89,18 @@ type svgLanguage struct {
 }
 
 func renderLanguagesSVG(stats []languageStat, colors map[string]string) []byte {
+	return renderLanguageUsageSVG(stats, colors, "Most Used Languages", "Git language usage by bytes.")
+}
+
+func renderLanguageUsageSVG(stats []languageStat, colors map[string]string, title, description string) []byte {
 	rows := (len(stats) + 1) / 2
 	height := max(115, 90+rows*25)
 	data := struct {
+		Title, Description   string
 		Height, BorderHeight int
 		Languages            []svgLanguage
 	}{
+		Title: html.EscapeString(title), Description: html.EscapeString(description),
 		Height: height, BorderHeight: height - 1,
 		Languages: make([]svgLanguage, 0, len(stats)),
 	}
@@ -160,7 +166,7 @@ func newStatsHandler(directory string, fetchStats func() error) (http.Handler, e
 	}
 	var refreshMu sync.Mutex
 	mux := http.NewServeMux()
-	mux.HandleFunc("GET /{$}", func(w http.ResponseWriter, r *http.Request) {
+	preview := func(w http.ResponseWriter, r *http.Request) {
 		query := r.URL.Query()
 		limit := 0
 		if query.Has("limit") {
@@ -175,7 +181,18 @@ func newStatsHandler(directory string, fetchStats func() error) (http.Handler, e
 		// Keep cache checks, writes, and reads serialized across requests.
 		refreshMu.Lock()
 		defer refreshMu.Unlock()
-		svg, err := generateStatsSVG(directory, limit, query["exclude"], colors, fetchStats)
+		var svg []byte
+		var err error
+		if r.URL.Path == "/wakatime" {
+			apiKey := os.Getenv("WAKATIME_API_KEY")
+			if apiKey == "" {
+				http.Error(w, "WakaTime preview requires WAKATIME_API_KEY", http.StatusServiceUnavailable)
+				return
+			}
+			svg, err = generateWakaTimeSVG(r.Context(), directory, apiKey, os.Getenv("WAKATIME_API_URL"), limit, query["exclude"], colors)
+		} else {
+			svg, err = generateStatsSVG(directory, limit, query["exclude"], colors, fetchStats)
+		}
 		if err != nil {
 			slog.Error("generate language statistics", "err", err)
 			http.Error(w, "Unable to generate language statistics", http.StatusInternalServerError)
@@ -185,7 +202,9 @@ func newStatsHandler(directory string, fetchStats func() error) (http.Handler, e
 		w.Header().Set("X-Content-Type-Options", "nosniff")
 		w.Header().Set("Cache-Control", "no-cache")
 		_, _ = w.Write(svg)
-	})
+	}
+	mux.HandleFunc("GET /{$}", preview)
+	mux.HandleFunc("GET /wakatime", preview)
 	return mux, nil
 }
 
@@ -198,8 +217,8 @@ func serveStats() error {
 	if addr == "" {
 		addr = ":8080"
 	}
-	server := &http.Server{Addr: addr, Handler: handler, ReadHeaderTimeout: 5 * time.Second, WriteTimeout: 15 * time.Second, IdleTimeout: 60 * time.Second}
-	slog.Info("serving language statistics", "address", addr, "path", "/")
+	server := &http.Server{Addr: addr, Handler: handler, ReadHeaderTimeout: 5 * time.Second, WriteTimeout: 45 * time.Second, IdleTimeout: 60 * time.Second}
+	slog.Info("serving language statistics", "address", addr, "paths", "/, /wakatime")
 	return server.ListenAndServe()
 }
 

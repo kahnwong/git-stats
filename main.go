@@ -1,6 +1,7 @@
 package main
 
 import (
+	"context"
 	"flag"
 	"log/slog"
 	"os"
@@ -31,4 +32,11 @@ func main() {
 		os.Exit(1)
 	}
 	slog.Info("SVG generated", "path", "data/stats.svg")
+	if apiKey := os.Getenv("WAKATIME_API_KEY"); apiKey != "" {
+		if _, err := generateWakaTimeSVG(context.Background(), "data", apiKey, os.Getenv("WAKATIME_API_URL"), *limit, []string{*exclude}, colors); err != nil {
+			slog.Error("WakaTime SVG generation failed", "err", err)
+			os.Exit(1)
+		}
+		slog.Info("SVG generated", "path", "data/wakatime-stats.svg")
+	}
 }
