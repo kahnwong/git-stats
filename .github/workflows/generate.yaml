@@ -27,14 +27,14 @@ jobs:
         run: go test ./...
       - name: Generate SVG
         env:
-          GH_TOKEN: ${{ secrets.GH_STATS_TOKEN }}
+          GH_TOKEN: ${{ secrets.GH_TOKEN }}
           WAKATIME_API_KEY: ${{ secrets.WAKATIME_API_KEY }}
           WAKATIME_API_URL: ${{ secrets.WAKATIME_API_URL }}
           FORGEJO_TOKEN: ${{ secrets.FORGEJO_TOKEN }}
           FORGEJO_URL: ${{ secrets.FORGEJO_URL }}
           FORGEJO_ORGS: ${{ secrets.FORGEJO_ORGS }}
         run: |
-          test -n "$GH_TOKEN" || { echo 'GH_STATS_TOKEN is required'; exit 1; }
+          test -n "$GH_TOKEN" || { echo 'GH_TOKEN is required'; exit 1; }
           test -n "$FORGEJO_TOKEN" || { echo 'FORGEJO_TOKEN is required'; exit 1; }
           # Always fetch fresh data on nightly runs, even if JSON is tracked.
           rm -f data/github.json data/forgejo.json data/forgejo-*.json
